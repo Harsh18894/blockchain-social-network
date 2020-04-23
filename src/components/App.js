@@ -4,12 +4,18 @@ import SocialNetwork from '../abis/SocialNetwork.json';
 import './App.css';
 import Navbar from './Navbar';
 import Main from './Main';
+import MetamaskAlert from './MetamaskAlert';
 
 class App extends Component {
 
   async componentWillMount() {
-    await this.loadWeb3()
-    await this.loadBlockchainData()
+    // Detect Metamask
+    const metamaskInstalled = typeof window.web3 !== 'undefined'
+    this.setState({ metamaskInstalled })
+    if (metamaskInstalled) {
+      await this.loadWeb3()
+      await this.loadBlockchainData()
+    }
   }
 
   async loadWeb3() {
@@ -23,7 +29,7 @@ class App extends Component {
     }
     // Non-dapp browsers...
     else {
-      window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!');
+      // Do Nothing
     }
   }
 
@@ -85,24 +91,30 @@ class App extends Component {
       socialNetwork: null,
       postCount: 0,
       posts: [],
-      loading: true
+      loading: true,
+      metamaskInstalled: false
     }
     this.createPost = this.createPost.bind(this)
     this.tipPost = this.tipPost.bind(this)
   }
 
   render() {
+    let content
+    if (this.state.loading) {
+      content = <div id="loader" className="text-center mt-5">Loading...</div>
+    } else {
+      content = <Main posts={this.state.posts} createPost={this.createPost} tipPost={this.tipPost} />
+    }
     return (
       <div>
         <Navbar account={this.state.account} />
-        {this.state.loading
-          ? <div id="loader" className="text-center mt-5">Loading...</div>
-          : <Main
-            posts={this.state.posts}
-            createPost={this.createPost}
-            tipPost={this.tipPost}
-          />
-        }
+        <div className="container-fluid mt-5">
+          <div className="row">
+            <main role="main" className="col-lg-12 ml-auto mr-auto" style={{ maxWidth: '600px' }}>
+              {this.state.metamaskInstalled ? content : <MetamaskAlert />}
+            </main>
+          </div>
+        </div>
       </div>
     );
   }
